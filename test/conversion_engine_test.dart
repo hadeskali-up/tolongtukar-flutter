@@ -4,9 +4,9 @@ import 'package:tolongtukar_flutter/domain/currency_rates.dart';
 import 'package:tolongtukar_flutter/domain/unit_definitions.dart';
 
 void main() {
-  test('ports all 20 categories and all 223 original units', () {
+  test('ports all 20 categories and all 253 original units and currencies', () {
     expect(UnitDefinitions.categories.length, 20);
-    expect(UnitDefinitions.categories.fold<int>(0, (n, c) => n + c.units.length), 223);
+    expect(UnitDefinitions.categories.fold<int>(0, (n, c) => n + c.units.length), 253);
   });
   test('length conversion avoids floating point noise', () => expect(ConversionEngine.convertToAll('length', 'meters', 1)['feet'], startsWith('3.28084')));
   test('temperature formulas work', () => expect(ConversionEngine.convertToAll('temperature', 'celsius', 100)['fahrenheit'], '212'));

@@ -3,7 +3,7 @@
 Full Flutter architecture port of `com.tolongtukar.app` using the NeedMCP `pet-care-dashboard` neobrutalist visual language: cream canvas, hard black borders, strong yellow/teal/orange cards and direct touch targets.
 
 ## Feature parity
-- Splash, home dashboard, 20 converter categories and all 223 unit/currency definitions
+- Splash, home dashboard, 20 converter categories and all 253 unit/currency definitions
 - Factor, reciprocal, temperature/shoe formula and numeral-system conversion
 - Daily forex refresh from `https://alisuhari.top/forex.json` with offline rates
 - Persisted category/unit reordering and system/light/dark themes

@@ -46,6 +46,11 @@ class _HomeScreenState extends State<HomeScreen> {
         title: Row(children: [Image.asset('assets/icon.png', width: 34), const SizedBox(width: 8), const Text('TolongTukar', style: TextStyle(fontWeight: FontWeight.w900))]),
         actions: [
           IconButton(tooltip: edit ? 'Done' : 'Reorder categories', onPressed: () => setState(() => edit = !edit), icon: Icon(edit ? Icons.done : Icons.edit)),
+          IconButton(
+            tooltip: widget.themeMode == ThemeMode.system ? 'Follow system (tap to override)' : widget.themeMode == ThemeMode.dark ? 'Switch to light' : 'Switch to dark',
+            onPressed: () => widget.onThemeChanged(widget.themeMode == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark),
+            icon: Icon(widget.themeMode == ThemeMode.system ? Icons.brightness_auto : widget.themeMode == ThemeMode.dark ? Icons.light_mode : Icons.dark_mode),
+          ),
           IconButton(tooltip: 'Settings', onPressed: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => SettingsScreen(settings: widget.settings, themeMode: widget.themeMode, onThemeChanged: widget.onThemeChanged))), icon: const Icon(Icons.settings)),
         ],
       ),

@@ -34,7 +34,16 @@ class _ConverterScreenState extends State<ConverterScreen> {
     pro = widget.settings.getBool(SettingsService.isPro);
     for (final id in order) { controllers[id] = TextEditingController(); }
     if (widget.categoryId == 'currency') {
-      ForexService.refresh().then((ok) { if (ok && mounted) setState(() => cat = UnitDefinitions.byId('currency')!); });
+      ForexService.refresh().then((ok) {
+        if (!ok || !mounted) return;
+        cat = UnitDefinitions.byId('currency')!;
+        final currentInput = controllers[active]?.text ?? '';
+        if (currentInput.isNotEmpty) {
+          input(active, currentInput);
+        } else {
+          setState(() {});
+        }
+      });
     }
   }
 

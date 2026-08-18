@@ -1,8 +1,102 @@
 import 'package:flutter/material.dart';
-import '../domain/conversion_engine.dart';import '../domain/currency_rates.dart';import '../domain/unit_definitions.dart';import '../services/forex_service.dart';import '../services/settings_service.dart';import '../widgets/ad_banner.dart';
-class ConverterScreen extends StatefulWidget {const ConverterScreen({super.key,required this.categoryId,required this.settings});final String categoryId;final SettingsService settings;@override State<ConverterScreen> createState()=>_ConverterScreenState();}
-class _ConverterScreenState extends State<ConverterScreen>{late CategoryDef cat;late List<String> order;Map<String,String> values={};String active='';bool edit=false;late bool pro;final controllers=<String,TextEditingController>{};
-@override void initState(){super.initState();cat=UnitDefinitions.byId(widget.categoryId)!;final all=cat.units.map((e)=>e.id).toList();final saved=widget.settings.getString('${SettingsService.unitOrderPrefix}${widget.categoryId}').split(',').where(all.contains).toList();order=[...saved,...all.where((e)=>!saved.contains(e))];active=order.first;pro=widget.settings.getBool(SettingsService.isPro);for(final id in order)controllers[id]=TextEditingController();if(widget.categoryId=='currency')ForexService.refresh().then((ok){if(ok&&mounted)setState(()=>cat=UnitDefinitions.byId('currency')!);});}
-void input(String id,String input){active=id;if(input.isEmpty){values={for(final x in order)x:''};}else if(cat.isStringBased){values=ConversionEngine.convertStringToAll(cat.id,id,input);}else{final n=double.tryParse(input.replaceAll(',',''));if(n==null)return;values=ConversionEngine.convertToAll(cat.id,id,n);}values[id]=input;for(final x in order){if(x!=id)controllers[x]!.text=values[x]??'';}setState((){});}
-@override void dispose(){for(final c in controllers.values)c.dispose();super.dispose();}
-@override Widget build(BuildContext context)=>Scaffold(appBar:AppBar(title:Text(cat.name,style:const TextStyle(fontWeight:FontWeight.w900)),actions:[IconButton(tooltip:edit?'Done':'Reorder units',onPressed:()=>setState(()=>edit=!edit),icon:Icon(edit?Icons.done:Icons.drag_indicator))]),body:Column(children:[if(widget.categoryId=='currency')Padding(padding:const EdgeInsets.all(8),child:Text('Rates updated daily · Last updated: ${CurrencyRates.lastUpdated}')),Expanded(child:ReorderableListView.builder(padding:const EdgeInsets.all(12),itemCount:order.length,onReorder:(a,b){if(!edit)return;if(b>a)b--;setState(()=>order.insert(b,order.removeAt(a)));widget.settings.putString('${SettingsService.unitOrderPrefix}${widget.categoryId}',order.join(','));},itemBuilder:(context,i){final id=order[i],u=cat.units.firstWhere((x)=>x.id==id);return Padding(key:ValueKey(id),padding:const EdgeInsets.only(bottom:8),child:Card(color:id==active?const Color(0xFFFFE475):null,child:Padding(padding:const EdgeInsets.all(10),child:Row(children:[if(edit)const Icon(Icons.drag_indicator),Expanded(child:Column(crossAxisAlignment:CrossAxisAlignment.start,children:[Text(u.name,style:const TextStyle(fontWeight:FontWeight.w800)),Text(u.symbol)])),SizedBox(width:150,child:TextField(controller:controllers[id],enabled:!edit,keyboardType:cat.isStringBased?TextInputType.text:const TextInputType.numberWithOptions(decimal:true,signed:true),textAlign:TextAlign.end,onChanged:(v)=>input(id,v)))])));})),if(!pro)const SafeArea(top:false,child:AdBanner())]));}
+import '../domain/conversion_engine.dart';
+import '../domain/currency_rates.dart';
+import '../domain/unit_definitions.dart';
+import '../services/forex_service.dart';
+import '../services/settings_service.dart';
+import '../widgets/ad_banner.dart';
+
+class ConverterScreen extends StatefulWidget {
+  const ConverterScreen({super.key, required this.categoryId, required this.settings});
+  final String categoryId;
+  final SettingsService settings;
+  @override
+  State<ConverterScreen> createState() => _ConverterScreenState();
+}
+
+class _ConverterScreenState extends State<ConverterScreen> {
+  late CategoryDef cat;
+  late List<String> order;
+  Map<String, String> values = {};
+  String active = '';
+  bool edit = false;
+  late bool pro;
+  final controllers = <String, TextEditingController>{};
+
+  @override
+  void initState() {
+    super.initState();
+    cat = UnitDefinitions.byId(widget.categoryId)!;
+    final all = cat.units.map((e) => e.id).toList();
+    final saved = widget.settings.getString('${SettingsService.unitOrderPrefix}${widget.categoryId}').split(',').where(all.contains).toList();
+    order = [...saved, ...all.where((e) => !saved.contains(e))];
+    active = order.first;
+    pro = widget.settings.getBool(SettingsService.isPro);
+    for (final id in order) { controllers[id] = TextEditingController(); }
+    if (widget.categoryId == 'currency') {
+      ForexService.refresh().then((ok) { if (ok && mounted) setState(() => cat = UnitDefinitions.byId('currency')!); });
+    }
+  }
+
+  void input(String id, String input) {
+    active = id;
+    if (input.isEmpty) {
+      values = {for (final x in order) x: ''};
+    } else if (cat.isStringBased) {
+      values = ConversionEngine.convertStringToAll(cat.id, id, input);
+    } else {
+      final n = double.tryParse(input.replaceAll(',', ''));
+      if (n == null) return;
+      values = ConversionEngine.convertToAll(cat.id, id, n);
+    }
+    values[id] = input;
+    for (final x in order) { if (x != id) controllers[x]!.text = values[x] ?? ''; }
+    setState(() {});
+  }
+
+  @override
+  void dispose() { for (final c in controllers.values) { c.dispose(); } super.dispose(); }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(cat.name, style: const TextStyle(fontWeight: FontWeight.w900)),
+        actions: [IconButton(tooltip: edit ? 'Done' : 'Reorder units', onPressed: () => setState(() => edit = !edit), icon: Icon(edit ? Icons.done : Icons.drag_indicator))],
+      ),
+      body: Column(children: [
+        if (widget.categoryId == 'currency') Padding(padding: const EdgeInsets.all(8), child: Text('Rates updated daily · Last updated: ${CurrencyRates.lastUpdated}')),
+        Expanded(
+          child: ReorderableListView.builder(
+            padding: const EdgeInsets.all(12), itemCount: order.length,
+            onReorder: (a, b) {
+              if (!edit) return;
+              if (b > a) b--;
+              setState(() => order.insert(b, order.removeAt(a)));
+              widget.settings.putString('${SettingsService.unitOrderPrefix}${widget.categoryId}', order.join(','));
+            },
+            itemBuilder: (context, i) {
+              final id = order[i];
+              final u = cat.units.firstWhere((x) => x.id == id);
+              return Padding(
+                key: ValueKey(id), padding: const EdgeInsets.only(bottom: 8),
+                child: Card(
+                  color: id == active ? const Color(0xFFFFE475) : null,
+                  child: Padding(
+                    padding: const EdgeInsets.all(10),
+                    child: Row(children: [
+                      if (edit) const Icon(Icons.drag_indicator),
+                      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(u.name, style: const TextStyle(fontWeight: FontWeight.w800)), Text(u.symbol)])),
+                      SizedBox(width: 150, child: TextField(controller: controllers[id], enabled: !edit, keyboardType: cat.isStringBased ? TextInputType.text : const TextInputType.numberWithOptions(decimal: true, signed: true), textAlign: TextAlign.end, onChanged: (v) => input(id, v))),
+                    ]),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        if (!pro) const SafeArea(top: false, child: AdBanner()),
+      ]),
+    );
+  }
+}

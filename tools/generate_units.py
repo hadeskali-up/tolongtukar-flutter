@@ -37,7 +37,7 @@ while True:
         units.append((uid,uname,symbol,kind,factor))
     categories.append((cid,name,units,'isStringBased = true' in block))
     pos=end
-out=["import 'dart:math' as math;","import 'currency_rates.dart';",'',"enum UnitStrategy { factor, reciprocal, formula }",'''class UnitDef {
+out=["import 'currency_rates.dart';",'',"enum UnitStrategy { factor, reciprocal, formula }",'''class UnitDef {
   const UnitDef({required this.id, required this.name, required this.symbol, required this.strategy, this.factor = 1});
   final String id, name, symbol;
   final UnitStrategy strategy;

@@ -1,4 +1,3 @@
-import 'dart:math' as math;
 import 'currency_rates.dart';
 
 enum UnitStrategy { factor, reciprocal, formula }

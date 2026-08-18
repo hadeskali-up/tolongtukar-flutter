@@ -18,6 +18,8 @@ jobs:
           cache: true
       - name: Generate Android host
         run: flutter create --platforms=android --org com.tolongtukar --project-name tolongtukar_flutter .
+      - name: Remove generated sample test
+        run: rm -f test/widget_test.dart
       - name: Preserve TolongTukar application ID and AdMob app ID
         run: |
           python - <<'PY'

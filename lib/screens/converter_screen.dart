@@ -29,7 +29,9 @@ class _ConverterScreenState extends State<ConverterScreen> {
     cat = UnitDefinitions.byId(widget.categoryId)!;
     final all = cat.units.map((e) => e.id).toList();
     final saved = widget.settings.getString('${SettingsService.unitOrderPrefix}${widget.categoryId}').split(',').where(all.contains).toList();
-    order = [...saved, ...all.where((e) => !saved.contains(e))];
+    order = widget.categoryId == 'currency'
+        ? all
+        : [...saved, ...all.where((e) => !saved.contains(e))];
     active = order.first;
     pro = widget.settings.getBool(SettingsService.isPro);
     for (final id in order) { controllers[id] = TextEditingController(); }
@@ -71,7 +73,10 @@ class _ConverterScreenState extends State<ConverterScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(cat.name, style: const TextStyle(fontWeight: FontWeight.w900)),
-        actions: [IconButton(tooltip: edit ? 'Done' : 'Reorder units', onPressed: () => setState(() => edit = !edit), icon: Icon(edit ? Icons.done : Icons.drag_indicator))],
+        actions: [
+          if (widget.categoryId != 'currency')
+            IconButton(tooltip: edit ? 'Done' : 'Reorder units', onPressed: () => setState(() => edit = !edit), icon: Icon(edit ? Icons.done : Icons.drag_indicator)),
+        ],
       ),
       body: Column(children: [
         if (widget.categoryId == 'currency') Padding(padding: const EdgeInsets.all(8), child: Text('Rates updated daily · Last updated: ${CurrencyRates.lastUpdated}')),

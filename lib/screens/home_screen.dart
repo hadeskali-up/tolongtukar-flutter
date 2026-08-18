@@ -26,21 +26,57 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   IconData icon(String id) => switch (id) {
-    'currency' => Icons.currency_exchange, 'length' => Icons.straighten,
-    'area' => Icons.crop_square, 'volume' => Icons.water_drop,
-    'mass' => Icons.scale, 'time' => Icons.schedule, 'speed' => Icons.speed,
-    'force' => Icons.bolt, 'fuel_consumption' => Icons.local_gas_station,
-    'pressure' => Icons.compress, 'energy' => Icons.sunny,
-    'power' => Icons.electrical_services, 'angle' => Icons.architecture,
-    'torque' => Icons.sync, 'digital_data' => Icons.memory,
-    'si_prefixes' => Icons.science, 'density' => Icons.blur_on,
-    'temperature' => Icons.thermostat, 'numeral_systems' => Icons.code,
-    'shoe_size' => Icons.directions_walk, _ => Icons.calculate,
+    'currency' => Icons.currency_exchange,
+    'length' => Icons.straighten,
+    'area' => Icons.crop_square,
+    'volume' => Icons.water_drop,
+    'mass' => Icons.scale,
+    'time' => Icons.schedule,
+    'speed' => Icons.speed,
+    'force' => Icons.bolt,
+    'fuel_consumption' => Icons.local_gas_station,
+    'pressure' => Icons.compress,
+    'energy' => Icons.sunny,
+    'power' => Icons.electrical_services,
+    'angle' => Icons.architecture,
+    'torque' => Icons.sync,
+    'digital_data' => Icons.memory,
+    'si_prefixes' => Icons.science,
+    'density' => Icons.blur_on,
+    'temperature' => Icons.thermostat,
+    'numeral_systems' => Icons.code,
+    'shoe_size' => Icons.directions_walk,
+    _ => Icons.calculate,
   };
+
+  void persistOrder() => widget.settings.putString(SettingsService.categoryOrder, order.join(','));
+
+  Future<void> moveCategory(String id) async {
+    final current = order.indexOf(id);
+    final target = await showModalBottomSheet<int>(
+      context: context,
+      builder: (context) => SafeArea(
+        child: ListView.builder(
+          shrinkWrap: true,
+          itemCount: order.length,
+          itemBuilder: (_, index) => ListTile(
+            leading: CircleAvatar(child: Text('${index + 1}')),
+            title: Text(UnitDefinitions.byId(order[index])!.name),
+            trailing: index == current ? const Icon(Icons.check) : null,
+            onTap: () => Navigator.pop(context, index),
+          ),
+        ),
+      ),
+    );
+    if (target == null || target == current) return;
+    setState(() => order.insert(target, order.removeAt(current)));
+    persistOrder();
+  }
 
   @override
   Widget build(BuildContext context) {
     final cats = {for (final c in UnitDefinitions.categories) c.id: c};
+    final colors = [const Color(0xFFE4EDF6), const Color(0xFFFDEBD7), const Color(0xFFE0F0EC), const Color(0xFFF1E7F0)];
     return Scaffold(
       appBar: AppBar(
         title: Row(children: [Image.asset('assets/icon.png', width: 34), const SizedBox(width: 8), const Text('TolongTukar', style: TextStyle(fontWeight: FontWeight.w900))]),
@@ -54,29 +90,35 @@ class _HomeScreenState extends State<HomeScreen> {
           IconButton(tooltip: 'Settings', onPressed: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => SettingsScreen(settings: widget.settings, themeMode: widget.themeMode, onThemeChanged: widget.onThemeChanged))), icon: const Icon(Icons.settings)),
         ],
       ),
-      body: ReorderableListView.builder(
+      body: GridView.builder(
+        key: const Key('home-category-grid'),
         padding: const EdgeInsets.all(16),
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3, crossAxisSpacing: 12, mainAxisSpacing: 12, childAspectRatio: 1),
         itemCount: order.length,
-        onReorder: (a, b) {
-          if (!edit) return;
-          if (b > a) b--;
-          setState(() => order.insert(b, order.removeAt(a)));
-          widget.settings.putString(SettingsService.categoryOrder, order.join(','));
-        },
-        itemBuilder: (context, i) {
-          final c = cats[order[i]]!;
-          return Padding(
-            key: ValueKey(c.id), padding: const EdgeInsets.only(bottom: 12),
-            child: Card(
-              color: [const Color(0xFFFFD02B), const Color(0xFF7AD9CC), const Color(0xFFFF9F68), const Color(0xFFB7A7F8)][i % 4],
-              child: ListTile(
-                contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-                leading: Icon(icon(c.id), size: 32, color: Colors.black),
-                title: Text(c.name, style: const TextStyle(fontWeight: FontWeight.w900, color: Colors.black)),
-                subtitle: Text('${c.units.length} units', style: const TextStyle(color: Colors.black87)),
-                trailing: Icon(edit ? Icons.drag_indicator : Icons.arrow_forward, color: Colors.black),
-                onTap: edit ? null : () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => ConverterScreen(categoryId: c.id, settings: widget.settings))),
-              ),
+        itemBuilder: (context, index) {
+          final category = cats[order[index]]!;
+          return Card(
+            color: Theme.of(context).colorScheme.surface,
+            child: InkWell(
+              onTap: edit ? () => moveCategory(category.id) : () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => ConverterScreen(categoryId: category.id, settings: widget.settings))),
+              child: Stack(children: [
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(8),
+                    child: Column(mainAxisSize: MainAxisSize.min, children: [
+                      Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(color: colors[index % colors.length], border: Border.all(color: Colors.black, width: 1.5), borderRadius: BorderRadius.circular(12)),
+                        child: Icon(icon(category.id), size: 27, color: const Color(0xFF1E3552)),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(category.name, maxLines: 2, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800)),
+                    ]),
+                  ),
+                ),
+                if (edit) const Positioned(top: 5, right: 5, child: Icon(Icons.drag_indicator, size: 18)),
+              ]),
             ),
           );
         },
